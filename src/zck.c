@@ -298,9 +298,17 @@ int main (int argc, char *argv[]) {
         exit(1);
     }
     if(in_size > 0) {
+        ssize_t nread;
+        size_t remain;
+        char *cur;
         data = malloc(in_size);
         assert(data);
-        if(read(in_fd, data, in_size) < in_size) {
+        for(cur = data, remain = in_size; remain > 0; cur += nread, remain -= nread) {
+            nread = read(in_fd, cur, remain);
+            if(nread <= 0)
+                break;
+        }
+        if(remain > 0) {
             LOG_ERROR("Unable to read from input file\n");
             exit(1);
         }
