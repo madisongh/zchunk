@@ -83,10 +83,10 @@ static bool finish_chunk(zckIndex *index, zckChunk *item, char *digest,
     char *s = get_digest_string(digest, index->digest_size);
     if (zck->has_uncompressed_source) {
         char *s1 = get_digest_string(digest_uncompressed, index->digest_size);
-        zck_log(ZCK_LOG_DEBUG, "Index %d digest %s digest uncomp %s", index->count, s, s1);
+        zck_log(ZCK_LOG_DEBUG, "Index %d digest %s digest uncomp %s", item->number, s, s1);
         free(s1);
     } else
-        zck_log(ZCK_LOG_DEBUG, "Index %d digest %s", index->count, s);
+        zck_log(ZCK_LOG_DEBUG, "Index %d digest %s", item->number, s);
     free(s);
     return true;
 }
