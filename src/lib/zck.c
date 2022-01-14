@@ -77,9 +77,9 @@ static void zck_clear(zckCtx *zck) {
         free(zck->prep_digest);
         zck->prep_digest = NULL;
     }
-    if(zck->temp_fd) {
+    if(zck->temp_fd >= 0) {
         close(zck->temp_fd);
-        zck->temp_fd = 0;
+        zck->temp_fd = -1;
     }
     if(zck->msg) {
         free(zck->msg);
@@ -367,17 +367,19 @@ bool ZCK_PUBLIC_API zck_close(zckCtx *zck) {
             return false;
         if(!header_create(zck))
             return false;
-        if(!write_header(zck))
-            return false;
-        zck_log(ZCK_LOG_DEBUG, "Writing chunks");
-        if(!chunks_from_temp(zck))
-            return false;
-        zck_log(ZCK_LOG_DEBUG, "Finished writing file, cleaning up");
+        if(zck->fd >= 0) {
+            if(!write_header(zck))
+                return false;
+            zck_log(ZCK_LOG_DEBUG, "Writing chunks");
+            if(!chunks_from_temp(zck))
+                return false;
+            zck_log(ZCK_LOG_DEBUG, "Finished writing file, cleaning up");
+        }
         if(!comp_close(zck))
             return false;
-        if(zck->temp_fd) {
+        if(zck->temp_fd >= 0) {
             close(zck->temp_fd);
-            zck->temp_fd = 0;
+            zck->temp_fd = -1;
         }
     } else {
         if(validate_file(zck, ZCK_LOG_WARNING) < 1)
@@ -404,6 +406,7 @@ zckCtx ZCK_PUBLIC_API *zck_create() {
     zck_clear_error(NULL);
     zck->prep_hash_type = -1;
     zck->prep_hdr_size = -1;
+    zck->temp_fd = -1;
     return zck;
 }
 
@@ -440,9 +443,11 @@ bool ZCK_PUBLIC_API zck_init_write (zckCtx *zck, int dst_fd) {
     VALIDATE_BOOL(zck);
 
     zck->mode = ZCK_MODE_WRITE;
-    zck->temp_fd = get_tmp_fd(zck);
-    if(zck->temp_fd < 0)
-        return false;
+    if(dst_fd >= 0) {
+        zck->temp_fd = get_tmp_fd(zck);
+        if(zck->temp_fd < 0)
+            return false;
+    }
 
     /* Set defaults */
 #ifdef ZCHUNK_ZSTD

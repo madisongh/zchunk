@@ -109,6 +109,11 @@ ssize_t tell_data(zckCtx *zck) {
 int chunks_from_temp(zckCtx *zck) {
     int read_count;
 
+    if (zck->temp_fd < 0 || zck->fd < 0) {
+        set_error(zck, "Internal error: expected non-negative temp_fd(%d) and fd(%d)", zck->temp_fd, zck->fd);
+        return false;
+    }
+
     if(lseek(zck->temp_fd, 0, SEEK_SET) == -1)
         return false;
 
